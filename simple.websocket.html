@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>desktop.cosmosenter.com</title>
+    <script>
+        var cosmos = {};
+    </script>
+    <script>
+        cosmos.socket = {
+            __socket: null,
+            __status: 0x00000000,
+            open: function(url, protocol){
+                cosmos.socket.__socket = new WebSocket(url, protocol);
+                cosmos.socket.__socket.onopen = function(event){
+                    console.log({status:"open", event: event});
+                    cosmos.socket.__status |= cosmos.socket.OPEN;
+                };
+
+            },
+            send: function(packet){
+                if(cosmos.socket.__socket!==null){
+                    if((cosmos.socket.__status & cosmos.socket.OPEN)===cosmos.socket.OPEN){
+                        cosmos.socket.__socket.send(packet);
+                    } else {
+                        console.log("(cosmos.socket.__status & cosmos.socket.OPEN)!==cosmos.socket.OPEN");
+                    }
+                } else {
+                    console.log("cosmos.socket.__socket===null");
+                }
+            },
+//            recv: function(msg){
+//                console.log(msg);
+//            },
+            close: function(){
+                if(cosmos.socket.__socket!==null){
+                    cosmos.socket.__socket.close();
+                    cosmos.socket.__socket = null;
+                    cosmos.socket.__status = 0x00000000;
+                } else {
+                    console.log("cosmos.socket.__socket===null");
+                }
+            }
+        };
+        Object.defineProperty(cosmos.socket, "OPEN", {value:(0x00000001 <<  0), writable: false, enumerable: true, configurable:true});
+    </script>
+    <script>
+        function onLoad(){
+            cosmos.socket.open("ws://127.0.0.1:13372");
+            cosmos.socket.__socket.onmessage = function(event){
+                console.log(event.data);
+            };
+        }
+        function send(){
+            var msg = document.getElementById("message").value;
+            if(msg){
+                msg.trim();
+                var re = /^[@ ]/;
+                if(msg.match(re)){
+                    console.log("parse");
+                    var strings = msg.split(' ');
+                    var friend = strings[0].substring(1);
+                    console.log(friend);
+                    msg = msg.substring(strings[0].length + 1);
+                    console.log(msg);
+                    cosmos.socket.send(JSON.stringify({action:"message", friend: friend,message:msg}));
+                } else {
+                    cosmos.socket.send(JSON.stringify({action:"message", message:msg}));
+                }
+            }
+        }
+    </script>
+</head>
+<body onload="onLoad();">
+<table width="401" cellpadding="0" cellspacing="0">
+    <tr>
+        <td width="300" height="400" style="padding:5px"><div id="console"></div></td>
+        <td width="1" height="400" style="background-color: black;"></td>
+        <td width="100" height="400" style="padding:5px"><div id="user"></div></td>
+    </tr>
+</table>
+<div>
+    <input type="text" id="message" value="@guest he">
+    <input type="button" value="send" onclick="send();">
+    <input type="button" value="user" onclick="users();">
+</div>
+<div>
+    <input type="text" id="me" value="guest">
+    <input type="button" value="login" onclick="login();">
+</div>
+</body>
+</html>
