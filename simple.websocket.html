@@ -6,6 +6,7 @@
     <title>desktop.cosmosenter.com</title>
     <script>
         var cosmos = {};
+        var reader = new FileReader();
     </script>
     <script>
         cosmos.socket = {
@@ -30,9 +31,6 @@
                     console.log("cosmos.socket.__socket===null");
                 }
             },
-//            recv: function(msg){
-//                console.log(msg);
-//            },
             close: function(){
                 if(cosmos.socket.__socket!==null){
                     cosmos.socket.__socket.close();
@@ -47,47 +45,29 @@
     </script>
     <script>
         function onLoad(){
-            cosmos.socket.open("ws://127.0.0.1:13372");
+            cosmos.socket.open("ws://127.0.0.1:13372","binary");
             cosmos.socket.__socket.onmessage = function(event){
-                console.log(event.data);
+                reader.onload = function(e){
+                     var div = document.getElementById("console");
+                     div.appendChild(document.createTextNode(e.currentTarget.result));
+                     div.appendChild(document.createElement("br"));
+                };
+                reader.readAsText(event.data);
             };
         }
         function send(){
             var msg = document.getElementById("message").value;
             if(msg){
-                msg.trim();
-                var re = /^[@ ]/;
-                if(msg.match(re)){
-                    console.log("parse");
-                    var strings = msg.split(' ');
-                    var friend = strings[0].substring(1);
-                    console.log(friend);
-                    msg = msg.substring(strings[0].length + 1);
-                    console.log(msg);
-                    cosmos.socket.send(JSON.stringify({action:"message", friend: friend,message:msg}));
-                } else {
-                    cosmos.socket.send(JSON.stringify({action:"message", message:msg}));
-                }
+                cosmos.socket.send(msg);
             }
         }
     </script>
 </head>
 <body onload="onLoad();">
-<table width="401" cellpadding="0" cellspacing="0">
-    <tr>
-        <td width="300" height="400" style="padding:5px"><div id="console"></div></td>
-        <td width="1" height="400" style="background-color: black;"></td>
-        <td width="100" height="400" style="padding:5px"><div id="user"></div></td>
-    </tr>
-</table>
+<div id="console" style="padding:5px;margin-bottom:5px;border-bottom: 1px solid #000000;"></div>
 <div>
-    <input type="text" id="message" value="@guest he">
+    <input type="text" id="message" value="h">
     <input type="button" value="send" onclick="send();">
-    <input type="button" value="user" onclick="users();">
-</div>
-<div>
-    <input type="text" id="me" value="guest">
-    <input type="button" value="login" onclick="login();">
 </div>
 </body>
 </html>

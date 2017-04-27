@@ -11,6 +11,7 @@ var server = net.createServer(function(socket){
     console.log("create");
     clients.push(socket);
     socket.on("data", function(data){
+        console.log(data);
         socket.write(data);
     });
     socket.on("end", function(){
